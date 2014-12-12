@@ -15,6 +15,17 @@ tie %all_networks, 'MLDBM', $db_filename
 # copy old state
 %old_networks = %all_networks;
 
+#print Dumper( \%all_networks );
+
+# reset FOUND flag for each network
+foreach $macaddr (keys %all_networks) {
+  $data = $all_networks{ $macaddr };
+  $data->{FOUND} = 0;
+  $all_networks{ $macaddr } = $data;
+}
+
+#print Dumper( \%all_networks );
+
 # remember and undef line separator
 # to enable multi-line regexp
 $sepsave = $/;
@@ -30,6 +41,7 @@ while (/Address: (.+)\n.+?ESSID:"(.+)"(\n.+?){3}\(Channel (\d+)\)(\n.+?)+?Qualit
     CHANNEL => $4,
     QUALITY => $6,
     SIGNALLEVEL => $7,
+    FOUND => 1
   };
   # add or update entry in db
   $all_networks{ $data->{MACADDR} } = $data;
@@ -38,28 +50,29 @@ while (/Address: (.+)\n.+?ESSID:"(.+)"(\n.+?){3}\(Channel (\d+)\)(\n.+?)+?Qualit
 # restore line separator
 $/ = $sepsave;
 
+# print Dumper( \%all_networks );
+
+# remove all networks that were not found from %all_networks
+foreach $macaddr (keys %all_networks) {
+  delete $all_networks{ $macaddr }
+    unless $all_networks{ $macaddr }->{FOUND} == 1;
+}
+
+# print Dumper( \%all_networks );
+
 # check for new networks
 foreach (keys %all_networks) {
-  print "new network: " . $all_networks{$_}->{SSID} . "(" . $all_networks{$_}->{MACADDR} . ")" . "\n"
+  print "new network: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . ")" . "\n"
     unless exists $old_networks{$_};
 }
 
 # check for "lost" networks
 foreach (keys %old_networks) {
-  print "lost network: " . $old_networks{$_}->{SSID} . "(" . $old_networks{$_}->{MACADDR} . ")" . "\n"
+  print "lost network: " . $old_networks{$_}->{SSID} . " (" . $old_networks{$_}->{MACADDR} . ")" . "\n"
     unless exists $all_networks{$_};
 }
 
 # check for changed channel
-#foreach (keys %all_networks) {
-#  if( exists $old_networks{$_} ) {
-#    $data_old = $old_networks{$_};
-#    $data = $all_networks{$_};
-#    if( $data_old->{CHANNEL} != $data->{CHANNEL} ) {
-#      print "channel changed: " . $data->{SSID} . "(" . $data->{MACADDR} . "): " . $data_old->{CHANNEL} . " -> " . $data->{CHANNEL} . "\n"
-#    }
-#  }
-#}
 foreach (keys %all_networks) {
   if( exists $old_networks{$_} ) {
     if( $old_networks{$_}->{CHANNEL} != $all_networks{$_}->{CHANNEL} ) {
