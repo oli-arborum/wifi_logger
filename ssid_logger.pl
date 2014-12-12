@@ -6,12 +6,16 @@ use Time::localtime;
 
 $db_filename = 'networks.db';
 $log_filename = 'networks_history.log';
+$msg_filename = 'messages.log';
 
 # scan all available wifi networks
 $iwlist = `iwlist scan 2> /dev/null`;
 
 # open or create log file
 open( LOG, ">> $log_filename" ) or die $!;
+
+# open or create messages file
+open( MSG, ">> $msg_filename" ) or die $!;
 
 # open or create file to store last state
 tie %all_networks, 'MLDBM', $db_filename
@@ -75,13 +79,13 @@ foreach $macaddr (keys %all_networks) {
 
 # check for new networks
 foreach (keys %all_networks) {
-  print "$timestamp - new network: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . ")" . "\n"
+  print MSG "$timestamp - new network: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . ")" . "\n"
     unless exists $old_networks{$_};
 }
 
 # check for "lost" networks
 foreach (keys %old_networks) {
-  print "$timestamp - lost network: " . $old_networks{$_}->{SSID} . " (" . $old_networks{$_}->{MACADDR} . ")" . "\n"
+  print MSG "$timestamp - lost network: " . $old_networks{$_}->{SSID} . " (" . $old_networks{$_}->{MACADDR} . ")" . "\n"
     unless exists $all_networks{$_};
 }
 
@@ -89,7 +93,7 @@ foreach (keys %old_networks) {
 foreach (keys %all_networks) {
   if( exists $old_networks{$_} ) {
     if( $old_networks{$_}->{CHANNEL} != $all_networks{$_}->{CHANNEL} ) {
-      print "$timestamp - channel changed: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . "): " . $old_networks{$_}->{CHANNEL} . " -> " . $all_networks{$_}->{CHANNEL} . "\n"
+      print MSG "$timestamp - channel changed: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . "): " . $old_networks{$_}->{CHANNEL} . " -> " . $all_networks{$_}->{CHANNEL} . "\n"
     }
   }
 }
@@ -99,4 +103,5 @@ foreach (keys %all_networks) {
 
 untie %all_networks;
 close LOG;
+close MSG;
 
