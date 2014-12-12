@@ -33,7 +33,7 @@ foreach $macaddr (keys %all_networks) {
 
 # generate timestamp string
 $tm = localtime;
-$timestamp = sprintf( "[%04d-%02d-%02d %02d:%02d:%02d]",
+$timestamp = sprintf( "%04d-%02d-%02d %02d:%02d:%02d",
   $tm->year+1900, $tm->mon+1, $tm->mday,
   $tm->hour, $tm->min, $tm->sec );
 
@@ -47,7 +47,7 @@ $_ = $iwlist;
 while (/Address: (.+)\n.+?ESSID:"(.+)"(\n.+?){3}\(Channel (\d+)\)(\n.+?)+?Quality=(\d+)\/.+?Signal level=(\d+)\//g) {
   $ssid = $2;
   $ssid =~ s/([\";])/\\$1/g;
-  print LOG "$timestamp $1; $4; $6; $7; $ssid\n";
+  print LOG "$timestamp; $1; $4; $6; $7; $ssid\n";
   $data = {
     MACADDR => $1,
     SSID => $2,
@@ -75,13 +75,13 @@ foreach $macaddr (keys %all_networks) {
 
 # check for new networks
 foreach (keys %all_networks) {
-  print "$timestamp new network: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . ")" . "\n"
+  print "$timestamp - new network: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . ")" . "\n"
     unless exists $old_networks{$_};
 }
 
 # check for "lost" networks
 foreach (keys %old_networks) {
-  print "$timestamp lost network: " . $old_networks{$_}->{SSID} . " (" . $old_networks{$_}->{MACADDR} . ")" . "\n"
+  print "$timestamp - lost network: " . $old_networks{$_}->{SSID} . " (" . $old_networks{$_}->{MACADDR} . ")" . "\n"
     unless exists $all_networks{$_};
 }
 
@@ -89,7 +89,7 @@ foreach (keys %old_networks) {
 foreach (keys %all_networks) {
   if( exists $old_networks{$_} ) {
     if( $old_networks{$_}->{CHANNEL} != $all_networks{$_}->{CHANNEL} ) {
-      print "$timestamp channel changed: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . "): " . $old_networks{$_}->{CHANNEL} . " -> " . $all_networks{$_}->{CHANNEL} . "\n"
+      print "$timestamp - channel changed: " . $all_networks{$_}->{SSID} . " (" . $all_networks{$_}->{MACADDR} . "): " . $old_networks{$_}->{CHANNEL} . " -> " . $all_networks{$_}->{CHANNEL} . "\n"
     }
   }
 }
