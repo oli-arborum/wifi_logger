@@ -13,7 +13,8 @@ $log_filename = "$dir/networks_history.log";
 $msg_filename = "$dir/messages.log";
 
 # scan all available wifi networks
-$iwlist = `iwlist scan 2> /dev/null`;
+#$iwlist = `iwlist scan 2> /dev/null`;
+$iwlist = `/sbin/iwlist scan`;
 
 # open or create log file
 open( LOG, ">> $log_filename" ) or die $!;
