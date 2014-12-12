@@ -3,10 +3,14 @@
 use Data::Dumper;
 use MLDBM qw(DB_File);
 use Time::localtime;
+use File::Basename;
+use Cwd 'abs_path';
 
-$db_filename = 'networks.db';
-$log_filename = 'networks_history.log';
-$msg_filename = 'messages.log';
+my $dir = dirname(abs_path(__FILE__));
+
+$db_filename = "$dir/networks.db";
+$log_filename = "$dir/networks_history.log";
+$msg_filename = "$dir/messages.log";
 
 # scan all available wifi networks
 $iwlist = `iwlist scan 2> /dev/null`;
